@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Dots - Avoid the Dots!</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <!-- Game Area -->
+        <div id="game-area">
+            <!-- Level indicator -->
+            <div id="level-indicator">
+                <span id="level-text">Level 1</span>
+            </div>
+            
+            <!-- Level up notification -->
+            <div id="level-up-notification" class="hidden">
+                <span id="level-up-text">Level 2</span>
+            </div>
+            
+            <!-- Player dot -->
+            <div id="player" class="dot player-dot"></div>
+            
+            <!-- Enemy container (enemies will be added dynamically) -->
+            <div id="enemies-container"></div>
+            
+            <!-- Countdown overlay -->
+            <div id="countdown-overlay">
+                <span id="countdown-text">4</span>
+            </div>
+        </div>
+        
+        <!-- Controls Area (mobile only) -->
+        <div id="controls-area">
+            <div id="joystick-base">
+                <div id="joystick-knob"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Start Screen -->
+    <div id="start-screen">
+        <div class="modal-content start-content">
+            <h1 class="game-title">DOTS</h1>
+            <p class="game-subtitle">Avoid the dots. Survive.</p>
+            <div class="name-input-container">
+                <label for="player-name">Enter your name</label>
+                <input type="text" id="player-name" placeholder="Player" maxlength="15" autocomplete="off">
+            </div>
+            <button id="start-btn">Start Game</button>
+        </div>
+    </div>
+    
+    <!-- Game Over Modal -->
+    <div id="game-over-modal" class="hidden">
+        <div class="modal-content">
+            <h1>Game Over</h1>
+            <p id="player-name-display" class="player-name-result"></p>
+            <div class="stats-container">
+                <div class="stat-item">
+                    <p class="stat-label">Level Reached</p>
+                    <p id="final-level" class="stat-value">1</p>
+                </div>
+                <div class="stat-item">
+                    <p class="stat-label">Total Time</p>
+                    <p id="survival-time" class="time-display">0.00</p>
+                    <p class="stat-unit">seconds</p>
+                </div>
+            </div>
+            <button id="restart-btn">Play Again</button>
+        </div>
+    </div>
+    
+    <script src="game.js"></script>
+</body>
+</html>
+
