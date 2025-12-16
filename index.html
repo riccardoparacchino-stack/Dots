@@ -62,10 +62,19 @@
                 <input type="text" id="player-name" placeholder="Player" maxlength="15" autocomplete="off">
             </div>
             <div class="country-select-container">
-                <label for="country-select">Country</label>
-                <select id="country-select">
-                    <option value="XX">🏳️ Detecting...</option>
-                </select>
+                <label>Country</label>
+                <div class="country-dropdown" id="country-dropdown">
+                    <div class="country-selected" id="country-selected">
+                        <span class="country-flag">🏳️</span>
+                        <span class="country-name">Select country...</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </div>
+                    <div class="country-search-container hidden" id="country-search-container">
+                        <input type="text" id="country-search" placeholder="Search country..." autocomplete="off">
+                        <div class="country-list" id="country-list"></div>
+                    </div>
+                </div>
+                <input type="hidden" id="country-code" value="XX">
             </div>
             <button id="start-btn">Start Game</button>
         </div>

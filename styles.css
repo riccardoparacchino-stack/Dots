@@ -871,32 +871,121 @@ html, body {
     letter-spacing: 1px;
 }
 
-#country-select {
-    width: 200px;
+/* Searchable Country Dropdown */
+.country-dropdown {
+    position: relative;
+    width: 220px;
+}
+
+.country-selected {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     padding: 12px 16px;
-    font-size: 16px;
-    text-align: center;
-    color: white;
     background-color: rgba(255, 255, 255, 0.1);
     border: 2px solid rgba(255, 255, 255, 0.2);
     border-radius: 8px;
-    outline: none;
     cursor: pointer;
     transition: all 0.2s ease;
-    font-family: inherit;
 }
 
-#country-select:hover {
+.country-selected:hover {
     border-color: rgba(255, 255, 255, 0.4);
 }
 
-#country-select:focus {
-    border-color: var(--accent);
+.country-selected .country-flag {
+    font-size: 20px;
 }
 
-#country-select option {
-    background: #2a2a2a;
+.country-selected .country-name {
+    flex: 1;
     color: white;
+    font-size: 14px;
+}
+
+.country-selected .dropdown-arrow {
+    font-size: 10px;
+    color: #888;
+    transition: transform 0.2s ease;
+}
+
+.country-search-container {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 4px;
+    background: #2a2a2a;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    overflow: hidden;
+    z-index: 100;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.country-search-container.hidden {
+    display: none;
+}
+
+#country-search {
+    width: 100%;
+    padding: 12px 16px;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    font-size: 14px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+#country-search::placeholder {
+    color: #666;
+}
+
+.country-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.country-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.country-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.country-item .country-flag {
+    font-size: 18px;
+}
+
+.country-item .country-name {
+    color: white;
+    font-size: 14px;
+}
+
+/* Scrollbar for country list */
+.country-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.country-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.country-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.country-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
 }
 
 /* Leaderboard Tabs */

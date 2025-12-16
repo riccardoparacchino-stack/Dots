@@ -57,74 +57,110 @@ const countryNames = {
     'AE': 'UAE', 'GB': 'United Kingdom', 'US': 'United States', 'VN': 'Vietnam', 'XX': 'Unknown'
 };
 
-// Detect country from IP
-// Configure IPAPI_KEY in config.js (create from config.example.js)
-const IPAPI_KEY = window.DOTS_CONFIG?.IPAPI_KEY || '';
+// ==========================================
+// SEARCHABLE COUNTRY DROPDOWN
+// ==========================================
+let countryDropdownOpen = false;
 
-async function detectCountry() {
-    try {
-        // Use free endpoint if no API key configured, otherwise use authenticated endpoint
-        const url = IPAPI_KEY 
-            ? `https://ipapi.co/json/?key=${IPAPI_KEY}`
-            : 'https://ipapi.co/json/';
-        const response = await fetch(url);
-        const data = await response.json();
-        return data.country_code || 'XX';
-    } catch (err) {
-        console.error('Failed to detect country:', err);
-        return 'XX';
-    }
-}
-
-// Populate country select dropdown
-function populateCountrySelect(detectedCountry) {
-    const select = document.getElementById('country-select');
-    if (!select) return;
+function initCountryDropdown() {
+    const dropdown = document.getElementById('country-dropdown');
+    const selected = document.getElementById('country-selected');
+    const searchContainer = document.getElementById('country-search-container');
+    const searchInput = document.getElementById('country-search');
+    const countryList = document.getElementById('country-list');
+    const countryCodeInput = document.getElementById('country-code');
     
-    // Clear existing options
-    select.innerHTML = '';
+    if (!dropdown || !selected || !searchContainer || !countryList) return;
     
     // Sort countries by name
     const sortedCountries = Object.entries(countryNames)
         .filter(([code]) => code !== 'XX')
         .sort((a, b) => a[1].localeCompare(b[1]));
     
-    // Add detected country first if valid
-    if (detectedCountry && detectedCountry !== 'XX') {
-        const flag = countryFlags[detectedCountry] || '🏳️';
-        const name = countryNames[detectedCountry] || detectedCountry;
-        const option = document.createElement('option');
-        option.value = detectedCountry;
-        option.textContent = `${flag} ${name}`;
-        option.selected = true;
-        select.appendChild(option);
+    // Render country list
+    function renderCountryList(filter = '') {
+        countryList.innerHTML = '';
+        const filterLower = filter.toLowerCase();
         
-        // Add separator
-        const separator = document.createElement('option');
-        separator.disabled = true;
-        separator.textContent = '───────────';
-        select.appendChild(separator);
+        for (const [code, name] of sortedCountries) {
+            if (filter && !name.toLowerCase().includes(filterLower)) continue;
+            
+            const flag = countryFlags[code] || '🏳️';
+            const item = document.createElement('div');
+            item.className = 'country-item';
+            item.dataset.code = code;
+            item.innerHTML = `<span class="country-flag">${flag}</span><span class="country-name">${name}</span>`;
+            item.addEventListener('click', () => selectCountry(code, name, flag));
+            countryList.appendChild(item);
+        }
+        
+        // Add "Unknown" option
+        if (!filter || 'unknown'.includes(filterLower)) {
+            const unknownItem = document.createElement('div');
+            unknownItem.className = 'country-item';
+            unknownItem.dataset.code = 'XX';
+            unknownItem.innerHTML = `<span class="country-flag">🏳️</span><span class="country-name">Unknown</span>`;
+            unknownItem.addEventListener('click', () => selectCountry('XX', 'Unknown', '🏳️'));
+            countryList.appendChild(unknownItem);
+        }
     }
     
-    // Add all countries
-    for (const [code, name] of sortedCountries) {
-        if (code === detectedCountry) continue; // Skip if already added
-        const flag = countryFlags[code] || '🏳️';
-        const option = document.createElement('option');
-        option.value = code;
-        option.textContent = `${flag} ${name}`;
-        select.appendChild(option);
+    // Select a country
+    function selectCountry(code, name, flag) {
+        selected.innerHTML = `
+            <span class="country-flag">${flag}</span>
+            <span class="country-name">${name}</span>
+            <span class="dropdown-arrow">▼</span>
+        `;
+        countryCodeInput.value = code;
+        game.countryCode = code;
+        closeDropdown();
     }
-
-    // Add unknown option at the end
-    const unknownOption = document.createElement('option');
-    unknownOption.value = 'XX';
-    unknownOption.textContent = '🏳️ Unknown';
-    // Select 'Unknown' if detection failed or returned XX
-    if (!detectedCountry || detectedCountry === 'XX') {
-        unknownOption.selected = true;
+    
+    // Open dropdown
+    function openDropdown() {
+        countryDropdownOpen = true;
+        searchContainer.classList.remove('hidden');
+        searchInput.value = '';
+        searchInput.focus();
+        renderCountryList();
     }
-    select.appendChild(unknownOption);
+    
+    // Close dropdown
+    function closeDropdown() {
+        countryDropdownOpen = false;
+        searchContainer.classList.add('hidden');
+    }
+    
+    // Toggle dropdown
+    selected.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (countryDropdownOpen) {
+            closeDropdown();
+        } else {
+            openDropdown();
+        }
+    });
+    
+    // Search filter
+    searchInput.addEventListener('input', (e) => {
+        renderCountryList(e.target.value);
+    });
+    
+    // Prevent closing when clicking inside
+    searchContainer.addEventListener('click', (e) => {
+        e.stopPropagation();
+    });
+    
+    // Close on click outside
+    document.addEventListener('click', () => {
+        if (countryDropdownOpen) {
+            closeDropdown();
+        }
+    });
+    
+    // Initial render
+    renderCountryList();
 }
 
 // Level Configuration
@@ -185,7 +221,7 @@ const leaderboardModal = document.getElementById('leaderboard-modal');
 const leaderboardList = document.getElementById('leaderboard-list');
 const closeLeaderboardBtn = document.getElementById('close-leaderboard-btn');
 const startLeaderboardBtn = document.getElementById('start-leaderboard-btn');
-const countrySelect = document.getElementById('country-select');
+const countryCodeInput = document.getElementById('country-code');
 const top10List = document.getElementById('top-10-list');
 const userPositionSection = document.getElementById('user-position');
 const leaderboardTabs = document.querySelectorAll('.tab-btn');
@@ -1253,9 +1289,10 @@ function handleStartGame() {
     const name = playerNameInput.value.trim();
     game.playerName = name || 'Player';
     
-    // Get country code from dropdown
-    if (countrySelect) {
-        game.countryCode = countrySelect.value || 'XX';
+    // Get country code from hidden input (set by dropdown)
+    const codeInput = document.getElementById('country-code');
+    if (codeInput) {
+        game.countryCode = codeInput.value || 'XX';
     }
 
     // Hide start screen
@@ -1272,13 +1309,11 @@ function handleStartGame() {
 }
 
 // Initialize game
-async function init() {
+function init() {
     setupEventListeners();
     
-    // Detect country and populate dropdown
-    const detectedCountry = await detectCountry();
-    game.countryCode = detectedCountry;
-    populateCountrySelect(detectedCountry);
+    // Initialize searchable country dropdown
+    initCountryDropdown();
 
     // Focus on name input
     setTimeout(() => {
