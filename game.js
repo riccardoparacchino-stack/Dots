@@ -1,9 +1,10 @@
 // ==========================================
 // SUPABASE CONFIGURATION
 // ==========================================
-// Replace these with your Supabase project credentials
-const SUPABASE_URL = 'https://dots.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_wlWgaOSfeSp9jtCHH227hQ_VfwdM-ax';
+// Configure these in config.js (create from config.example.js)
+// Or set window.DOTS_CONFIG before loading this script
+const SUPABASE_URL = window.DOTS_CONFIG?.SUPABASE_URL || 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON_KEY = window.DOTS_CONFIG?.SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY';
 
 // Initialize Supabase client (will be null if not configured)
 let supabase = null;
@@ -57,12 +58,16 @@ const countryNames = {
 };
 
 // Detect country from IP
-// ipapi.co API key
-const IPAPI_KEY = '5066437644d40903d33f61f91e72ca6e';
+// Configure IPAPI_KEY in config.js (create from config.example.js)
+const IPAPI_KEY = window.DOTS_CONFIG?.IPAPI_KEY || '';
 
 async function detectCountry() {
     try {
-        const response = await fetch(`https://ipapi.co/json/?key=${IPAPI_KEY}`);
+        // Use free endpoint if no API key configured, otherwise use authenticated endpoint
+        const url = IPAPI_KEY 
+            ? `https://ipapi.co/json/?key=${IPAPI_KEY}`
+            : 'https://ipapi.co/json/';
+        const response = await fetch(url);
         const data = await response.json();
         return data.country_code || 'XX';
     } catch (err) {
@@ -110,11 +115,15 @@ function populateCountrySelect(detectedCountry) {
         option.textContent = `${flag} ${name}`;
         select.appendChild(option);
     }
-    
+
     // Add unknown option at the end
     const unknownOption = document.createElement('option');
     unknownOption.value = 'XX';
     unknownOption.textContent = '🏳️ Unknown';
+    // Select 'Unknown' if detection failed or returned XX
+    if (!detectedCountry || detectedCountry === 'XX') {
+        unknownOption.selected = true;
+    }
     select.appendChild(unknownOption);
 }
 
