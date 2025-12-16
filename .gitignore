@@ -1,0 +1,15 @@
+# Configuration with secrets - NEVER commit!
+config.js
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
