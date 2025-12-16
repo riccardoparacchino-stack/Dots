@@ -490,6 +490,7 @@ html, body {
     color: white;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.1);
+    overflow: visible;
 }
 
 .modal-content h1 {
@@ -862,6 +863,8 @@ html, body {
     align-items: center;
     gap: 8px;
     margin-bottom: 20px;
+    position: relative;
+    z-index: 50;
 }
 
 .country-select-container label {
@@ -869,6 +872,11 @@ html, body {
     color: #888;
     text-transform: uppercase;
     letter-spacing: 1px;
+}
+
+/* Ensure start-content allows dropdown to overflow */
+.start-content {
+    overflow: visible !important;
 }
 
 /* Searchable Country Dropdown */
@@ -919,7 +927,7 @@ html, body {
     border: 2px solid rgba(255, 255, 255, 0.2);
     border-radius: 8px;
     overflow: hidden;
-    z-index: 100;
+    z-index: 9999;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
