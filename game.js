@@ -1,3 +1,120 @@
+// ==========================================
+// SUPABASE CONFIGURATION
+// ==========================================
+// Replace these with your Supabase project credentials
+const SUPABASE_URL = 'https://dots.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_wlWgaOSfeSp9jtCHH227hQ_VfwdM-ax';
+
+// Initialize Supabase client (will be null if not configured)
+let supabase = null;
+if (SUPABASE_URL !== 'YOUR_SUPABASE_URL' && window.supabase) {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+
+// Get or create unique player ID (stored in localStorage)
+function getPlayerId() {
+    let playerId = localStorage.getItem('dots_player_id');
+    if (!playerId) {
+        playerId = crypto.randomUUID();
+        localStorage.setItem('dots_player_id', playerId);
+    }
+    return playerId;
+}
+
+// ==========================================
+// COUNTRY DATA
+// ==========================================
+const countryFlags = {
+    'AF': '🇦🇫', 'AL': '🇦🇱', 'DZ': '🇩🇿', 'AR': '🇦🇷', 'AU': '🇦🇺',
+    'AT': '🇦🇹', 'BE': '🇧🇪', 'BR': '🇧🇷', 'BG': '🇧🇬', 'CA': '🇨🇦',
+    'CL': '🇨🇱', 'CN': '🇨🇳', 'CO': '🇨🇴', 'HR': '🇭🇷', 'CZ': '🇨🇿',
+    'DK': '🇩🇰', 'EG': '🇪🇬', 'EE': '🇪🇪', 'FI': '🇫🇮', 'FR': '🇫🇷',
+    'DE': '🇩🇪', 'GR': '🇬🇷', 'HK': '🇭🇰', 'HU': '🇭🇺', 'IS': '🇮🇸',
+    'IN': '🇮🇳', 'ID': '🇮🇩', 'IE': '🇮🇪', 'IL': '🇮🇱', 'IT': '🇮🇹',
+    'JP': '🇯🇵', 'KR': '🇰🇷', 'LV': '🇱🇻', 'LT': '🇱🇹', 'LU': '🇱🇺',
+    'MY': '🇲🇾', 'MX': '🇲🇽', 'NL': '🇳🇱', 'NZ': '🇳🇿', 'NO': '🇳🇴',
+    'PK': '🇵🇰', 'PE': '🇵🇪', 'PH': '🇵🇭', 'PL': '🇵🇱', 'PT': '🇵🇹',
+    'RO': '🇷🇴', 'RU': '🇷🇺', 'SA': '🇸🇦', 'RS': '🇷🇸', 'SG': '🇸🇬',
+    'SK': '🇸🇰', 'SI': '🇸🇮', 'ZA': '🇿🇦', 'ES': '🇪🇸', 'SE': '🇸🇪',
+    'CH': '🇨🇭', 'TW': '🇹🇼', 'TH': '🇹🇭', 'TR': '🇹🇷', 'UA': '🇺🇦',
+    'AE': '🇦🇪', 'GB': '🇬🇧', 'US': '🇺🇸', 'VN': '🇻🇳', 'XX': '🏳️'
+};
+
+const countryNames = {
+    'AF': 'Afghanistan', 'AL': 'Albania', 'DZ': 'Algeria', 'AR': 'Argentina', 'AU': 'Australia',
+    'AT': 'Austria', 'BE': 'Belgium', 'BR': 'Brazil', 'BG': 'Bulgaria', 'CA': 'Canada',
+    'CL': 'Chile', 'CN': 'China', 'CO': 'Colombia', 'HR': 'Croatia', 'CZ': 'Czech Republic',
+    'DK': 'Denmark', 'EG': 'Egypt', 'EE': 'Estonia', 'FI': 'Finland', 'FR': 'France',
+    'DE': 'Germany', 'GR': 'Greece', 'HK': 'Hong Kong', 'HU': 'Hungary', 'IS': 'Iceland',
+    'IN': 'India', 'ID': 'Indonesia', 'IE': 'Ireland', 'IL': 'Israel', 'IT': 'Italy',
+    'JP': 'Japan', 'KR': 'South Korea', 'LV': 'Latvia', 'LT': 'Lithuania', 'LU': 'Luxembourg',
+    'MY': 'Malaysia', 'MX': 'Mexico', 'NL': 'Netherlands', 'NZ': 'New Zealand', 'NO': 'Norway',
+    'PK': 'Pakistan', 'PE': 'Peru', 'PH': 'Philippines', 'PL': 'Poland', 'PT': 'Portugal',
+    'RO': 'Romania', 'RU': 'Russia', 'SA': 'Saudi Arabia', 'RS': 'Serbia', 'SG': 'Singapore',
+    'SK': 'Slovakia', 'SI': 'Slovenia', 'ZA': 'South Africa', 'ES': 'Spain', 'SE': 'Sweden',
+    'CH': 'Switzerland', 'TW': 'Taiwan', 'TH': 'Thailand', 'TR': 'Turkey', 'UA': 'Ukraine',
+    'AE': 'UAE', 'GB': 'United Kingdom', 'US': 'United States', 'VN': 'Vietnam', 'XX': 'Unknown'
+};
+
+// Detect country from IP
+async function detectCountry() {
+    try {
+        const response = await fetch('https://ipapi.co/json/');
+        const data = await response.json();
+        return data.country_code || 'XX';
+    } catch (err) {
+        console.error('Failed to detect country:', err);
+        return 'XX';
+    }
+}
+
+// Populate country select dropdown
+function populateCountrySelect(detectedCountry) {
+    const select = document.getElementById('country-select');
+    if (!select) return;
+    
+    // Clear existing options
+    select.innerHTML = '';
+    
+    // Sort countries by name
+    const sortedCountries = Object.entries(countryNames)
+        .filter(([code]) => code !== 'XX')
+        .sort((a, b) => a[1].localeCompare(b[1]));
+    
+    // Add detected country first if valid
+    if (detectedCountry && detectedCountry !== 'XX') {
+        const flag = countryFlags[detectedCountry] || '🏳️';
+        const name = countryNames[detectedCountry] || detectedCountry;
+        const option = document.createElement('option');
+        option.value = detectedCountry;
+        option.textContent = `${flag} ${name}`;
+        option.selected = true;
+        select.appendChild(option);
+        
+        // Add separator
+        const separator = document.createElement('option');
+        separator.disabled = true;
+        separator.textContent = '───────────';
+        select.appendChild(separator);
+    }
+    
+    // Add all countries
+    for (const [code, name] of sortedCountries) {
+        if (code === detectedCountry) continue; // Skip if already added
+        const flag = countryFlags[code] || '🏳️';
+        const option = document.createElement('option');
+        option.value = code;
+        option.textContent = `${flag} ${name}`;
+        select.appendChild(option);
+    }
+    
+    // Add unknown option at the end
+    const unknownOption = document.createElement('option');
+    unknownOption.value = 'XX';
+    unknownOption.textContent = '🏳️ Unknown';
+    select.appendChild(unknownOption);
+}
+
 // Level Configuration
 const LEVELS = [
     { level: 1,  timeStart: 0,   enemies: 4, speed: 2.5, trackers: 0, directionChange: false, speedBurst: false },
@@ -24,7 +141,8 @@ const game = {
     currentLevel: 1,
     lastDirectionChangeTime: 0,
     lastSpeedBurstTime: 0,
-    playerName: 'Player'
+    playerName: 'Player',
+    countryCode: 'XX'
 };
 
 // DOM Elements
@@ -50,6 +168,15 @@ const playerNameDisplay = document.getElementById('player-name-display');
 const pauseBtn = document.getElementById('pause-btn');
 const pauseOverlay = document.getElementById('pause-overlay');
 const resumeBtn = document.getElementById('resume-btn');
+const leaderboardBtn = document.getElementById('leaderboard-btn');
+const leaderboardModal = document.getElementById('leaderboard-modal');
+const leaderboardList = document.getElementById('leaderboard-list');
+const closeLeaderboardBtn = document.getElementById('close-leaderboard-btn');
+const startLeaderboardBtn = document.getElementById('start-leaderboard-btn');
+const countrySelect = document.getElementById('country-select');
+const top10List = document.getElementById('top-10-list');
+const userPositionSection = document.getElementById('user-position');
+const leaderboardTabs = document.querySelectorAll('.tab-btn');
 
 // Game dimensions (will be updated on resize)
 let gameWidth = 0;
@@ -586,10 +713,33 @@ function startGame() {
 }
 
 // Game over
-function gameOver() {
+async function gameOver() {
     game.isRunning = false;
     if (game.animationId) {
         cancelAnimationFrame(game.animationId);
+    }
+    
+    // Save score to Supabase
+    if (supabase) {
+        try {
+            const { error } = await supabase
+                .from('leaderboard')
+                .insert({
+                    player_id: getPlayerId(),
+                    player_name: game.playerName,
+                    country_code: game.countryCode,
+                    score: parseFloat(game.elapsedTime.toFixed(2)),
+                    level: game.currentLevel
+                });
+
+            if (error) {
+                console.error('Error saving score:', error);
+            } else {
+                console.log('Score saved successfully!');
+            }
+        } catch (err) {
+            console.error('Failed to save score:', err);
+        }
     }
     
     // Show game over modal with stats
@@ -648,8 +798,8 @@ function handleKeyDown(e) {
         updateInputFromKeys();
     }
     
-    // Pause with Escape or P key
-    if ((e.key === 'Escape' || e.key === 'p' || e.key === 'P') && game.isRunning) {
+    // Pause with Escape, P, or Space key
+    if ((e.key === 'Escape' || e.key === 'p' || e.key === 'P' || e.key === ' ') && game.isRunning) {
         e.preventDefault();
         togglePause();
     }
@@ -811,6 +961,40 @@ function setupEventListeners() {
         resumeGame();
     });
     
+    // Leaderboard button
+    if (leaderboardBtn) {
+        leaderboardBtn.addEventListener('click', showLeaderboard);
+        leaderboardBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            showLeaderboard();
+        });
+    }
+    
+    // Close leaderboard button
+    if (closeLeaderboardBtn) {
+        closeLeaderboardBtn.addEventListener('click', hideLeaderboard);
+        closeLeaderboardBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            hideLeaderboard();
+        });
+    }
+    
+    // Trophy button (start screen leaderboard)
+    if (startLeaderboardBtn) {
+        startLeaderboardBtn.addEventListener('click', showLeaderboard);
+        startLeaderboardBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            showLeaderboard();
+        });
+    }
+    
+    // Leaderboard tab buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            switchLeaderboardTab(btn.dataset.tab);
+        });
+    });
+
     // Window resize
     window.addEventListener('resize', () => {
         updateDimensions();
@@ -822,29 +1006,268 @@ function setupEventListeners() {
     });
 }
 
+// Leaderboard state
+let currentLeaderboardTab = 'global';
+
+// Fetch global leaderboard (best score per player)
+async function fetchGlobalLeaderboard() {
+    if (!supabase) {
+        return { top10: null, userBest: null, userRank: null };
+    }
+
+    try {
+        // Try to use the view first, fall back to regular table
+        let top10Data, top10Error;
+        
+        // Try global_leaderboard view
+        const viewResult = await supabase
+            .from('global_leaderboard')
+            .select('*')
+            .order('score', { ascending: false })
+            .limit(10);
+        
+        if (viewResult.error) {
+            // Fallback to regular leaderboard table
+            const tableResult = await supabase
+                .from('leaderboard')
+                .select('*')
+                .order('score', { ascending: false })
+                .limit(10);
+            top10Data = tableResult.data;
+            top10Error = tableResult.error;
+        } else {
+            top10Data = viewResult.data;
+            top10Error = viewResult.error;
+        }
+
+        if (top10Error) {
+            console.error('Error fetching top 10:', top10Error);
+            return { top10: null, userBest: null, userRank: null };
+        }
+
+        // Get user's best score
+        const playerId = getPlayerId();
+        const { data: userScores } = await supabase
+            .from('leaderboard')
+            .select('*')
+            .eq('player_id', playerId)
+            .order('score', { ascending: false })
+            .limit(1);
+        
+        const userBest = userScores && userScores.length > 0 ? userScores[0] : null;
+
+        // Calculate user's rank
+        let userRank = null;
+        if (userBest) {
+            const { count } = await supabase
+                .from('leaderboard')
+                .select('*', { count: 'exact', head: true })
+                .gt('score', userBest.score);
+            userRank = (count || 0) + 1;
+        }
+
+        return { top10: top10Data, userBest, userRank };
+    } catch (err) {
+        console.error('Failed to fetch global leaderboard:', err);
+        return { top10: null, userBest: null, userRank: null };
+    }
+}
+
+// Fetch personal scores
+async function fetchPersonalLeaderboard() {
+    if (!supabase) {
+        return null;
+    }
+
+    try {
+        const { data, error } = await supabase
+            .from('leaderboard')
+            .select('*')
+            .eq('player_id', getPlayerId())
+            .order('score', { ascending: false })
+            .limit(10);
+
+        if (error) {
+            console.error('Error fetching personal scores:', error);
+            return null;
+        }
+        return data;
+    } catch (err) {
+        console.error('Failed to fetch personal scores:', err);
+        return null;
+    }
+}
+
+// Render a leaderboard row with flag
+function renderLeaderboardRow(entry, rank, isHighlighted = false) {
+    const flag = countryFlags[entry.country_code] || '🏳️';
+    const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}`;
+    const topThreeClass = rank <= 3 && !isHighlighted ? 'top-three' : '';
+    
+    return `
+        <div class="leaderboard-row ${topThreeClass}">
+            <span class="rank">${medal}</span>
+            <span class="flag">${flag}</span>
+            <span class="player">${escapeHtml(entry.player_name)}</span>
+            <span class="score">${entry.score.toFixed(2)}s</span>
+            <span class="level">Lv.${entry.level}</span>
+        </div>
+    `;
+}
+
+// Display leaderboard
+async function showLeaderboard() {
+    leaderboardModal.classList.remove('hidden');
+    await renderLeaderboard();
+}
+
+// Render leaderboard content based on current tab
+async function renderLeaderboard() {
+    const listElement = top10List || leaderboardList;
+    listElement.innerHTML = '<p class="loading-text">Loading...</p>';
+    
+    if (userPositionSection) {
+        userPositionSection.innerHTML = '';
+        userPositionSection.classList.add('hidden');
+    }
+
+    if (!supabase) {
+        listElement.innerHTML = `
+            <div class="leaderboard-error">
+                <p>⚠️ Supabase not configured</p>
+                <p class="error-details">Add your Supabase credentials in game.js</p>
+            </div>
+        `;
+        return;
+    }
+
+    if (currentLeaderboardTab === 'global') {
+        await renderGlobalLeaderboard();
+    } else {
+        await renderPersonalLeaderboard();
+    }
+}
+
+// Render global leaderboard
+async function renderGlobalLeaderboard() {
+    const listElement = top10List || leaderboardList;
+    const { top10, userBest, userRank } = await fetchGlobalLeaderboard();
+
+    if (!top10 || top10.length === 0) {
+        listElement.innerHTML = '<p class="no-scores">No scores yet. Be the first!</p>';
+        return;
+    }
+
+    let html = '<div class="leaderboard-table">';
+    html += '<div class="leaderboard-header"><span>#</span><span></span><span>Player</span><span>Time</span><span>Level</span></div>';
+
+    top10.forEach((entry, index) => {
+        html += renderLeaderboardRow(entry, index + 1);
+    });
+
+    html += '</div>';
+    listElement.innerHTML = html;
+
+    // Show user position if not in top 10
+    if (userPositionSection && userBest && userRank > 10) {
+        userPositionSection.classList.remove('hidden');
+        userPositionSection.innerHTML = `
+            <div class="user-position-header">Your Position</div>
+            <div class="leaderboard-table">
+                ${renderLeaderboardRow(userBest, userRank, true)}
+            </div>
+        `;
+    } else if (userPositionSection) {
+        userPositionSection.classList.add('hidden');
+    }
+}
+
+// Render personal leaderboard
+async function renderPersonalLeaderboard() {
+    const listElement = top10List || leaderboardList;
+    const data = await fetchPersonalLeaderboard();
+
+    if (userPositionSection) {
+        userPositionSection.classList.add('hidden');
+    }
+
+    if (!data || data.length === 0) {
+        listElement.innerHTML = '<p class="no-scores">No personal scores yet. Play a game!</p>';
+        return;
+    }
+
+    let html = '<div class="leaderboard-table">';
+    html += '<div class="leaderboard-header"><span>#</span><span></span><span>Player</span><span>Time</span><span>Level</span></div>';
+
+    data.forEach((entry, index) => {
+        html += renderLeaderboardRow(entry, index + 1);
+    });
+
+    html += '</div>';
+    listElement.innerHTML = html;
+}
+
+// Switch leaderboard tab
+async function switchLeaderboardTab(tab) {
+    currentLeaderboardTab = tab;
+    
+    // Update tab button states
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        if (btn.dataset.tab === tab) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+    
+    await renderLeaderboard();
+}
+
+// Hide leaderboard
+function hideLeaderboard() {
+    leaderboardModal.classList.add('hidden');
+}
+
+// Escape HTML to prevent XSS
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 // Handle start game from start screen
 function handleStartGame() {
     // Get player name
     const name = playerNameInput.value.trim();
     game.playerName = name || 'Player';
     
+    // Get country code from dropdown
+    if (countrySelect) {
+        game.countryCode = countrySelect.value || 'XX';
+    }
+
     // Hide start screen
     startScreen.classList.add('hidden');
-    
+
     // Initialize game positions
     updateDimensions();
     initPlayerPosition();
     initEnemyPositions(LEVELS[0].enemies, LEVELS[0]);
     updateDotPositions();
-    
+
     // Start countdown
     setTimeout(startCountdown, 300);
 }
 
 // Initialize game
-function init() {
+async function init() {
     setupEventListeners();
     
+    // Detect country and populate dropdown
+    const detectedCountry = await detectCountry();
+    game.countryCode = detectedCountry;
+    populateCountrySelect(detectedCountry);
+
     // Focus on name input
     setTimeout(() => {
         playerNameInput.focus();

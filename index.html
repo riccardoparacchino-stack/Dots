@@ -53,12 +53,19 @@
     
     <!-- Start Screen -->
     <div id="start-screen">
+        <button id="start-leaderboard-btn" class="trophy-btn" aria-label="Leaderboard">🏆</button>
         <div class="modal-content start-content">
             <h1 class="game-title">DOTS</h1>
             <p class="game-subtitle">Avoid the dots. Survive.</p>
             <div class="name-input-container">
                 <label for="player-name">Enter your name</label>
                 <input type="text" id="player-name" placeholder="Player" maxlength="15" autocomplete="off">
+            </div>
+            <div class="country-select-container">
+                <label for="country-select">Country</label>
+                <select id="country-select">
+                    <option value="XX">🏳️ Detecting...</option>
+                </select>
             </div>
             <button id="start-btn">Start Game</button>
         </div>
@@ -81,9 +88,32 @@
                 </div>
             </div>
             <button id="restart-btn">Play Again</button>
+            <button id="leaderboard-btn" class="secondary-btn">Leaderboard</button>
         </div>
     </div>
     
+    <!-- Leaderboard Modal -->
+    <div id="leaderboard-modal" class="hidden">
+        <div class="modal-content leaderboard-content">
+            <button id="close-leaderboard-btn" class="close-btn" aria-label="Close">&times;</button>
+            <h1>🏆 Leaderboard</h1>
+            
+            <div class="leaderboard-tabs">
+                <button class="tab-btn active" data-tab="global">🌍 Global</button>
+                <button class="tab-btn" data-tab="personal">👤 My Scores</button>
+            </div>
+            
+            <div id="leaderboard-content">
+                <div id="top-10-list">
+                    <p class="loading-text">Loading...</p>
+                </div>
+                <div id="user-position" class="user-position-section"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="game.js"></script>
 </body>
 </html>
