@@ -107,6 +107,94 @@ html, body {
     letter-spacing: 1px;
 }
 
+/* Pause Button */
+#pause-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 50;
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 0, 0, 0.7);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: -2px;
+}
+
+#pause-btn:hover {
+    background: rgba(0, 0, 0, 0.85);
+    transform: scale(1.1);
+}
+
+#pause-btn:active {
+    transform: scale(0.95);
+}
+
+/* Pause Overlay */
+#pause-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.2s ease;
+}
+
+#pause-overlay.hidden {
+    display: none;
+}
+
+.pause-content {
+    text-align: center;
+}
+
+.pause-content h2 {
+    font-size: 48px;
+    font-weight: 700;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 8px;
+    margin-bottom: 30px;
+}
+
+#resume-btn {
+    padding: 14px 40px;
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+    background-color: var(--accent);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+#resume-btn:hover {
+    background-color: #d62929;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(196, 30, 30, 0.4);
+}
+
+#resume-btn:active {
+    transform: translateY(0);
+}
+
 /* Level Up Notification */
 #level-up-notification {
     position: absolute;
@@ -294,8 +382,10 @@ html, body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
     margin-bottom: 30px;
+    padding-top: 1px;
+    padding-bottom: 1px;
 }
 
 .name-input-container label {
@@ -390,6 +480,9 @@ html, body {
 }
 
 .modal-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
     background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
     padding: 50px 60px;
     border-radius: 16px;

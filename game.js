@@ -15,9 +15,11 @@ const LEVELS = [
 // Game State
 const game = {
     isRunning: false,
+    isPaused: false,
     isCountingDown: false,
     startTime: 0,
     elapsedTime: 0,
+    pausedTime: 0,
     animationId: null,
     currentLevel: 1,
     lastDirectionChangeTime: 0,
@@ -45,6 +47,9 @@ const startScreen = document.getElementById('start-screen');
 const playerNameInput = document.getElementById('player-name');
 const startBtn = document.getElementById('start-btn');
 const playerNameDisplay = document.getElementById('player-name-display');
+const pauseBtn = document.getElementById('pause-btn');
+const pauseOverlay = document.getElementById('pause-overlay');
+const resumeBtn = document.getElementById('resume-btn');
 
 // Game dimensions (will be updated on resize)
 let gameWidth = 0;
@@ -471,9 +476,48 @@ function showLevelUpNotification(level) {
     }, 1500);
 }
 
+// Pause game
+function pauseGame() {
+    if (!game.isRunning || game.isPaused || game.isCountingDown) return;
+    
+    game.isPaused = true;
+    game.pausedTime = Date.now();
+    
+    if (game.animationId) {
+        cancelAnimationFrame(game.animationId);
+    }
+    
+    pauseOverlay.classList.remove('hidden');
+}
+
+// Resume game
+function resumeGame() {
+    if (!game.isPaused) return;
+    
+    // Adjust start time to account for paused duration
+    const pauseDuration = Date.now() - game.pausedTime;
+    game.startTime += pauseDuration;
+    game.lastDirectionChangeTime += pauseDuration;
+    game.lastSpeedBurstTime += pauseDuration;
+    
+    game.isPaused = false;
+    pauseOverlay.classList.add('hidden');
+    
+    game.animationId = requestAnimationFrame(gameLoop);
+}
+
+// Toggle pause
+function togglePause() {
+    if (game.isPaused) {
+        resumeGame();
+    } else {
+        pauseGame();
+    }
+}
+
 // Game loop
 function gameLoop(timestamp) {
-    if (!game.isRunning) return;
+    if (!game.isRunning || game.isPaused) return;
     
     // Update elapsed time
     game.elapsedTime = (Date.now() - game.startTime) / 1000;
@@ -558,9 +602,13 @@ function gameOver() {
 // Reset and restart game
 function resetGame() {
     game.isRunning = false;
+    game.isPaused = false;
     game.isCountingDown = false;
     game.elapsedTime = 0;
     game.currentLevel = 1;
+    
+    // Hide pause overlay
+    pauseOverlay.classList.add('hidden');
     
     if (game.animationId) {
         cancelAnimationFrame(game.animationId);
@@ -598,6 +646,12 @@ function handleKeyDown(e) {
         e.preventDefault();
         keysPressed[e.key] = true;
         updateInputFromKeys();
+    }
+    
+    // Pause with Escape or P key
+    if ((e.key === 'Escape' || e.key === 'p' || e.key === 'P') && game.isRunning) {
+        e.preventDefault();
+        togglePause();
     }
 }
 
@@ -741,6 +795,20 @@ function setupEventListeners() {
     restartBtn.addEventListener('touchend', (e) => {
         e.preventDefault();
         resetGame();
+    });
+    
+    // Pause button
+    pauseBtn.addEventListener('click', pauseGame);
+    pauseBtn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        pauseGame();
+    });
+    
+    // Resume button
+    resumeBtn.addEventListener('click', resumeGame);
+    resumeBtn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        resumeGame();
     });
     
     // Window resize
