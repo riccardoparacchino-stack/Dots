@@ -57,9 +57,12 @@ const countryNames = {
 };
 
 // Detect country from IP
+// ipapi.co API key
+const IPAPI_KEY = '5066437644d40903d33f61f91e72ca6e';
+
 async function detectCountry() {
     try {
-        const response = await fetch('https://ipapi.co/json/');
+        const response = await fetch(`https://ipapi.co/json/?key=${IPAPI_KEY}`);
         const data = await response.json();
         return data.country_code || 'XX';
     } catch (err) {
